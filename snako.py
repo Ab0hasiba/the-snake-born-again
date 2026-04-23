@@ -140,16 +140,41 @@ class Game:
                         pr.WHITE)
 
     def DrawDifficultyScreen(self):
+        W = 2 * self.offset + self.cellsize * self.cellcount  # 900
+
         pr.clear_background(self.blue)
-        pr.draw_text("The Hungry Snake :3", 235, 20, 40, self.darkblue)
-        pr.draw_text("---------------------------------------------------------------------------------------------------------------", 0, 55, 40, self.darkblue)
-        pr.draw_text("Select Difficulty", 295, 90, 40, self.darkblue)
-        pr.draw_text("-----------------", 295, 120, 40, self.darkblue)
-        pr.draw_text("Press 1 for Easy", 300, 200, 30, self.darkblue)
-        pr.draw_text("Press 2 for Medium", 300, 250, 30, self.darkblue)
-        pr.draw_text("Press 3 for Hard", 300, 300, 30, self.darkblue)
-        pr.draw_text("Developed By:some monkeys", 230, 700, 40, self.darkblue)
-        pr.draw_text("------------------------", 230, 730, 40, self.darkblue)
+
+        # --- Title ---
+        title = "The Snake Born Again"
+        title_w = pr.measure_text(title, 40)
+        pr.draw_text(title, (W - title_w) // 2, 25, 40, self.darkblue)
+
+        # Separator line under title
+        pr.draw_line(40, 75, W - 40, 75, self.darkblue)
+
+        # --- Subtitle ---
+        sub = "Select Difficulty"
+        sub_w = pr.measure_text(sub, 35)
+        pr.draw_text(sub, (W - sub_w) // 2, 110, 35, self.darkblue)
+
+        # Underline for subtitle
+        pr.draw_line((W - sub_w) // 2, 150, (W + sub_w) // 2, 150, self.darkblue)
+
+        # --- Difficulty options ---
+        opt1 = "Press  1  for  Easy"
+        opt2 = "Press  2  for  Medium"
+        opt3 = "Press  3  for  Hard"
+        opt_size = 30
+        for i, opt in enumerate([opt1, opt2, opt3]):
+            opt_w = pr.measure_text(opt, opt_size)
+            pr.draw_text(opt, (W - opt_w) // 2, 230 + i * 80, opt_size, self.darkblue)
+
+        # --- Footer ---
+        footer = "Developed By: Five Monkeys"
+        footer_size = 28
+        footer_w = pr.measure_text(footer, footer_size)
+        pr.draw_line(40, W - 90, W - 40, W - 90, self.darkblue)
+        pr.draw_text(footer, (W - footer_w) // 2, W - 75, footer_size, self.darkblue)
 
     def UpdateDifficultyScreen(self):
         if pr.is_key_pressed(pr.KEY_ONE) or pr.is_key_pressed(pr.KEY_KP_1):
