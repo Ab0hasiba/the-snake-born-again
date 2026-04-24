@@ -15,6 +15,7 @@ class Game:
         self.moving = False
         self.difficultyScreenActive = True
         self.gameOverScreenActive = False
+        self.gameWonScreenActive = False
         self.gameSpeed = 0.25
         
         # Colors
@@ -93,13 +94,24 @@ class Game:
         self.gameOverScreenActive = True
         if self.currentMusic:
             pr.stop_sound(self.currentMusic)
-        self.currentMusic = self.gameOverMusic
+        self.currentMusic = None
+        pr.play_sound(self.gameOverMusic)
 
     def DrawGameOverScreen(self):
-        pr.draw_rectangle(0, 0, 2 * self.offset + self.cellsize * self.cellcount, 2 * self.offset + self.cellsize * self.cellcount, pr.Color(63, 153, 216, 200))
-        pr.draw_text("GAME OVER", 335, 300, 60, self.darkblue)
-        pr.draw_text(f"Final Score: {self.score}", 355, 400, 40, self.darkblue)
-        pr.draw_text("Press Enter to Return to Menu", 220, 500, 30, self.darkblue)
+        W = 2 * self.offset + self.cellsize * self.cellcount
+        pr.draw_rectangle(0, 0, W, W, pr.Color(63, 153, 216, 200))
+        
+        title = "GAME OVER"
+        title_w = pr.measure_text(title, 60)
+        pr.draw_text(title, (W - title_w) // 2, 300, 60, self.darkblue)
+        
+        score_text = f"Final Score: {self.score}"
+        score_w = pr.measure_text(score_text, 40)
+        pr.draw_text(score_text, (W - score_w) // 2, 400, 40, self.darkblue)
+        
+        prompt = "Press Enter to Return to Menu"
+        prompt_w = pr.measure_text(prompt, 30)
+        pr.draw_text(prompt, (W - prompt_w) // 2, 500, 30, self.darkblue)
 
     def UpdateGameOverScreen(self):
         if pr.is_key_pressed(pr.KEY_ENTER):
@@ -108,6 +120,43 @@ class Game:
             self.foodPosition = self.GenerateRandomFoodPos()
             self.score = 0
             self.gameOverScreenActive = False
+            self.difficultyScreenActive = True
+            if self.currentMusic:
+                pr.stop_sound(self.currentMusic)
+            pr.stop_sound(self.gameOverMusic)
+            self.currentMusic = self.backgroundMusic
+
+    def GameWon(self):
+        self.running = False
+        self.moving = False
+        self.gameWonScreenActive = True
+        if self.currentMusic:
+            pr.stop_sound(self.currentMusic)
+        self.currentMusic = None
+
+    def DrawGameWonScreen(self):
+        W = 2 * self.offset + self.cellsize * self.cellcount
+        pr.draw_rectangle(0, 0, W, W, pr.Color(63, 216, 153, 200))
+        
+        title = "YOU WIN!"
+        title_w = pr.measure_text(title, 60)
+        pr.draw_text(title, (W - title_w) // 2, 300, 60, self.darkblue)
+        
+        score_text = f"Final Score: {self.score}"
+        score_w = pr.measure_text(score_text, 40)
+        pr.draw_text(score_text, (W - score_w) // 2, 400, 40, self.darkblue)
+        
+        prompt = "Press Enter to Return to Menu"
+        prompt_w = pr.measure_text(prompt, 30)
+        pr.draw_text(prompt, (W - prompt_w) // 2, 500, 30, self.darkblue)
+
+    def UpdateGameWonScreen(self):
+        if pr.is_key_pressed(pr.KEY_ENTER):
+            self.snakeBody = deque([pr.Vector2(6, 9), pr.Vector2(5, 9)])
+            self.snakeDirection = pr.Vector2(1, 0)
+            self.foodPosition = self.GenerateRandomFoodPos()
+            self.score = 0
+            self.gameWonScreenActive = False
             self.difficultyScreenActive = True
             if self.currentMusic:
                 pr.stop_sound(self.currentMusic)
@@ -196,7 +245,7 @@ class Game:
     def initating(self):
         pr.init_window(2 * self.offset + self.cellsize * self.cellcount, 
                        2 * self.offset + self.cellsize * self.cellcount, 
-                       "The Hungry Snake")
+                       "The Snake born again")
         pr.set_target_fps(60)
 
         pr.init_audio_device()
@@ -229,7 +278,7 @@ class Game:
             if self.difficultyScreenActive:
                 self.DrawDifficultyScreen()
                 self.UpdateDifficultyScreen()
-            elif self.gameOverScreenActive:
+            elif self.gameOverScreenActive or self.gameWonScreenActive:
                 pr.clear_background(self.blue)
                 bounds = pr.Rectangle(float(self.offset - 5), float(self.offset - 5), 
                                       float(self.cellsize * self.cellcount + 10), float(self.cellsize * self.cellcount + 10))
@@ -240,8 +289,12 @@ class Game:
                 self.DrawFood()
                 self.DrawSnake()
                 
-                self.DrawGameOverScreen()
-                self.UpdateGameOverScreen()
+                if self.gameOverScreenActive:
+                    self.DrawGameOverScreen()
+                    self.UpdateGameOverScreen()
+                else:
+                    self.DrawGameWonScreen()
+                    self.UpdateGameWonScreen()
             else:
                 if self.eventTriggered(self.gameSpeed):
                     if self.running:
@@ -249,6 +302,8 @@ class Game:
                         self.CheckCollisionWithFood()
                         self.CheckCollisionWithEdges()
                         self.CheckCollisionWithBody()
+                        if len(self.snakeBody) >= self.cellcount * self.cellcount:
+                            self.GameWon()
 
                 # Movement Controls
                 if (pr.is_key_pressed(pr.KEY_UP) or pr.is_key_pressed(pr.KEY_W)) and self.snakeDirection.y != 1:
@@ -276,7 +331,7 @@ class Game:
                 pr.draw_rectangle_lines_ex(bounds, 5, self.darkblue)
                 
                 # Draw UI
-                pr.draw_text("The Hungry Snake :3", 235, 20, 40, self.darkblue)
+                pr.draw_text("The Snake born again", 235, 20, 40, self.darkblue)
                 pr.draw_text("Apples Eaten: ", self.offset - 5, self.offset + self.cellcount * self.cellsize + 10, 40, self.darkblue)
                 pr.draw_text(f"{self.score}", 355, self.offset + self.cellcount * self.cellsize + 10, 40, self.darkblue)
                 
